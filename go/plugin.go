@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/asticode/go-astikit"
 	"github.com/asticode/go-astilectron"
 	flutter "github.com/go-flutter-desktop/go-flutter"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
@@ -13,7 +12,10 @@ import (
 const channelName = "hwebview"
 
 // HwebviewPlugin implements flutter.Plugin and handles method.
-type HwebviewPlugin struct{}
+type HwebviewPlugin struct {
+	Options        astilectron.Options
+	WindowsOptions *astilectron.WindowOptions
+}
 
 var _ flutter.Plugin = &HwebviewPlugin{} // compile-time type check
 
@@ -31,10 +33,7 @@ func (p *HwebviewPlugin) handleWebview(arguments interface{}) (reply interface{}
 	l := log.New(log.Writer(), log.Prefix(), log.Flags())
 
 	// Create astilectron
-	a, err := astilectron.New(l, astilectron.Options{
-		AppName:           "ION",
-		BaseDirectoryPath: "build",
-	})
+	a, err := astilectron.New(l, p.Options)
 	if err != nil {
 		l.Fatal(fmt.Errorf("main: creating astilectron failed: %w", err))
 	}
@@ -49,15 +48,7 @@ func (p *HwebviewPlugin) handleWebview(arguments interface{}) (reply interface{}
 	}
 	// New window
 	var w *astilectron.Window
-	if w, err = a.NewWindow(url, &astilectron.WindowOptions{
-		Center: astikit.BoolPtr(true),
-		Height: astikit.IntPtr(700),
-		Width:  astikit.IntPtr(700),
-		WebPreferences: &astilectron.WebPreferences{
-			Webaudio: astikit.BoolPtr(true),
-			Webgl:    astikit.BoolPtr(true),
-		},
-	}); err != nil {
+	if w, err = a.NewWindow(url, p.WindowsOptions); err != nil {
 		l.Fatal(fmt.Errorf("main: new window failed: %w", err))
 	}
 
